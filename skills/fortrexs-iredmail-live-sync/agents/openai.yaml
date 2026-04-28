@@ -1,0 +1,3 @@
+interface:
+  display_name: "Fortrexs iRedMail Live Sync"
+  short_description: "Sync live mailhost config to GitHub safely"
