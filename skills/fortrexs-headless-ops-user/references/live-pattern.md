@@ -13,6 +13,17 @@ Current observed live example:
   - `/home/cdx/snapshots`
 - first-pass sudo policy:
   - `cdx ALL=(ALL) NOPASSWD: ALL`
+- local SSH alias on this workstation:
+  - `mail-cdx`
+- local SSH config path on this workstation:
+  - `C:\Users\mraaaooo\.ssh\config`
+
+Testing note:
+
+- in a sandboxed Codex desktop process, plain `ssh mail-cdx ...` may consult a
+  different HOME directory
+- in that case, test with:
+  - `ssh -F C:\Users\mraaaooo\.ssh\config mail-cdx whoami`
 
 Operational note:
 
