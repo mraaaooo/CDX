@@ -1,0 +1,3 @@
+interface:
+  display_name: "Fortrexs Dokuwiki Publish"
+  short_description: "Publish notes to the live Fortrexs DokuWiki safely"
