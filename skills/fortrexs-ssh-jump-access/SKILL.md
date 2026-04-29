@@ -117,7 +117,51 @@ ssh -F C:\Users\mraaaooo\.codex\tmp\ssh\config files-cdx2 whoami
 ssh -F C:\Users\mraaaooo\.codex\tmp\ssh\config files-cdx2 sudo -n whoami
 ```
 
-### 6. Keep blocked hosts explicit
+### 6. Prefer one persistent headless channel for a live work session
+
+When you are about to run several commands against the same host from Codex
+desktop, do not renegotiate SSH for every single command if you can avoid it.
+
+Preferred pattern:
+- open one control-master connection first
+- hold it open for the duration of the diagnostic or maintenance session
+- run follow-up commands over that existing channel
+- close it explicitly when you are done
+
+Current workstation pattern:
+
+```bash
+ssh -F C:\Users\mraaaooo\.codex\tmp\ssh\config ^
+    -MN ^
+    -o ControlMaster=yes ^
+    -o ControlPersist=yes ^
+    -o ControlPath=C:\Users\mraaaooo\.codex\tmp\ssh\mail-cdx-control ^
+    mail-cdx
+```
+
+Then reuse the channel:
+
+```bash
+ssh -S C:\Users\mraaaooo\.codex\tmp\ssh\mail-cdx-control ^
+    -F C:\Users\mraaaooo\.codex\tmp\ssh\config ^
+    mail-cdx whoami
+```
+
+And close it deliberately:
+
+```bash
+ssh -S C:\Users\mraaaooo\.codex\tmp\ssh\mail-cdx-control ^
+    -O exit ^
+    -F C:\Users\mraaaooo\.codex\tmp\ssh\config ^
+    mail-cdx
+```
+
+Why this matters here:
+- it reduces repeated approval and connection churn in Codex desktop
+- it keeps diagnostics on one stable headless path
+- it matches the user's preferred operating model for Fortrexs hosts
+
+### 7. Keep blocked hosts explicit
 
 If one host still lacks a working bootstrap user or key:
 - do not fake completion

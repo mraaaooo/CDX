@@ -120,7 +120,44 @@ ssh -F C:\Users\mraaaooo\.ssh\config mail-cdx sudo whoami
 If `ssh -G -F ... mail-cdx` resolves the alias correctly but the connect still
 fails, that points more to local sandbox/network policy than to a bad alias.
 
-### 8. Keep the rollout reusable
+### 8. Prefer one persistent headless channel during live ops
+
+When you are working through several commands on the same host from Codex
+desktop, prefer opening a single control-master connection first and then
+reusing it instead of reconnecting for every command.
+
+Current workstation pattern:
+
+```bash
+ssh -F C:\Users\mraaaooo\.codex\tmp\ssh\config ^
+    -MN ^
+    -o ControlMaster=yes ^
+    -o ControlPersist=yes ^
+    -o ControlPath=C:\Users\mraaaooo\.codex\tmp\ssh\mail-cdx-control ^
+    mail-cdx
+```
+
+Then run commands through the held-open channel:
+
+```bash
+ssh -S C:\Users\mraaaooo\.codex\tmp\ssh\mail-cdx-control ^
+    -F C:\Users\mraaaooo\.codex\tmp\ssh\config ^
+    mail-cdx sudo -n whoami
+```
+
+And close it deliberately at the end:
+
+```bash
+ssh -S C:\Users\mraaaooo\.codex\tmp\ssh\mail-cdx-control ^
+    -O exit ^
+    -F C:\Users\mraaaooo\.codex\tmp\ssh\config ^
+    mail-cdx
+```
+
+Treat this as the default live-ops pattern unless there is a good reason not
+to.
+
+### 9. Keep the rollout reusable
 
 If this pattern is intended to recur:
 - save the skill in the working repo
