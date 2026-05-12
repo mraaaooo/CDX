@@ -25,6 +25,7 @@ Do not store or repeat Multitel credentials, Redmine API keys, SIP passwords, fu
 - Notification bridge root: `/opt/fortrexs-notify`.
 - Notification bridge config: `/etc/fortrexs-notify/config.json`; treat as secret-bearing.
 - Notification bridge state: `/var/lib/fortrexs-notify/state.sqlite`.
+- Multitel monitor notifications use the dedicated Delta Chat sender mailbox `monitor@ruaxx.org`, not `redmine@ruaxx.org`.
 
 ## FreeSWITCH Baseline 2026-05-12
 
@@ -102,6 +103,8 @@ Multitel/API and app baseline snapshot on `mail-cdx`:
   - Post-sync MySQL verification: `12` active Multitel numbers, `12` active authorized caller IDs, `2` balance snapshots, API request rows for `v3/inventory`, `v3/balance`, and `v3/getbalance` all HTTP `200` / provider `200`.
   - `multitel_sip_accounts` and `multitel_number_sip_assignments` remained `0` because Multitel `/inventory` did not expose SIP assignment fields.
   - Temporary migration files under `/tmp/multitel-slice101-apply` were removed after verification.
+- Notification identity for this slice was provisioned on `mail-cdx`: mailbox `monitor@ruaxx.org`, LDAP `fortrexsServiceAccess: deltachat`, and `fortrexs-notify` sender config with display name `Fortrexs Monitor`. Config backup: `/etc/fortrexs-notify/config.json.bak-monitor-20260512`.
+- Delta Chat verification for `monitor@ruaxx.org`: secure join with `mraaaooo@ruaxx.org` reached `ready`, test job `ac3fc58d-164e-458f-b615-a09555d32500` sent as `dc_message_id=16`, and the user confirmed arrival.
 - Inventory-imported caller IDs use `source=multitel_inventory`, `allow_explicit_use=true`, and `allow_auto_selection=true`.
 - Customer-provided caller IDs must use a separate source such as `customer_verified_external`; inventory imports only disable caller IDs whose source is `multitel_inventory`.
 
