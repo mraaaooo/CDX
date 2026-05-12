@@ -70,6 +70,23 @@ Multitel/API and app baseline snapshot on `mail-cdx`:
 - `fortrexs-notify-config.json`: `1.8K`, SHA256 `9744359ff2fc1a38f7794affd0e2d8b84c5ae7d00f06f616f0ed4fd7c2287dec`
 - `fortrexs-notify-state.sqlite`: `52K`, SHA256 `40225458fd6e5eaebe2c1fa319c4e78702990e84926aa94b0f44a94816aa815d`
 
+## Slice 101 Inventory Implementation Facts
+
+- Redmine issue `#101` branch: `mraaaooo/fortrexs-dev-plan-v1-slice-101`.
+- Backend repo worktree used for the first implementation slice: `C:\tmp\fortrexs-sms-slice101`.
+- New local control tables introduced in backend DB: `multitel_api_requests`, `multitel_inventory_snapshots`, `multitel_numbers`, `authorized_caller_ids`, `multitel_inventory_events`, `multitel_balance_snapshots`, `multitel_sip_accounts`, and `multitel_number_sip_assignments`.
+- Production target for inventory, caller-ID policy, pricing, balance, and routing-control data is MySQL via `DATABASE_URL`; SQLite remains only the current service compatibility/local smoke-test path until a DB migration is approved.
+- User requested a normalized MySQL schema and a log of every Multitel API request. Saved-response imports write `multitel_api_requests` rows with redacted metadata and response hashes; live API clients must also log every call there.
+- Multitel voice-routing model is trunk SIP accounts plus FreeSWITCH, not Hosted PBX.
+- User stated there are `8` Multitel trunk SIP accounts configured in the portal; track them in `multitel_sip_accounts` and DID assignments in `multitel_number_sip_assignments`.
+- Non-critical pilot DID for a future approved Multitel SIP-account assignment mutation test: `447520644604`.
+- Offline importer script: `backend/scripts/sync_multitel_snapshot.py`.
+- Importer accepts saved Multitel inventory and balance JSON files; it does not call the live API itself in this slice.
+- Controlled SQLite smoke test verified added, changed, removed, balance snapshot, and inventory caller-ID disable behavior.
+- Saved real Multitel snapshot `/var/backups/fortrexs/multitel/20260512T094200Z/inventory.json` imported cleanly into a throwaway DB with `12` active inventory numbers and `12` active Multitel-owned authorized caller IDs.
+- Inventory-imported caller IDs use `source=multitel_inventory`, `allow_explicit_use=true`, and `allow_auto_selection=true`.
+- Customer-provided caller IDs must use a separate source such as `customer_verified_external`; inventory imports only disable caller IDs whose source is `multitel_inventory`.
+
 ## Safe Rollout Rules
 
 - First slice is Redmine issue `#102`: restore point and baseline only.
