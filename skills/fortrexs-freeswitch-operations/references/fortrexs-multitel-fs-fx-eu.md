@@ -82,8 +82,20 @@ Multitel/API and app baseline snapshot on `mail-cdx`:
 - Non-critical pilot DID for a future approved Multitel SIP-account assignment mutation test: `447520644604`.
 - Offline importer script: `backend/scripts/sync_multitel_snapshot.py`.
 - Importer accepts saved Multitel inventory and balance JSON files; it does not call the live API itself in this slice.
+- Follow-up commit `a678da9` adds live read-only API sync to the same importer:
+  - `--live-inventory`
+  - `--live-balance balance`
+  - `--live-balance getbalance`
+- Live sync uses `MULTITEL_USER` and `MULTITEL_PASS`, forces IPv4 by default, and logs each request in `multitel_api_requests` with method, URL without credentials, HTTP status, provider status, response hash, duration, and response payload.
 - Controlled SQLite smoke test verified added, changed, removed, balance snapshot, and inventory caller-ID disable behavior.
 - Saved real Multitel snapshot `/var/backups/fortrexs/multitel/20260512T094200Z/inventory.json` imported cleanly into a throwaway DB with `12` active inventory numbers and `12` active Multitel-owned authorized caller IDs.
+- Read-only live test from `mail-cdx` into a temporary `/tmp` SQLite DB succeeded on 2026-05-12:
+  - `v3/inventory`: HTTP `200`, provider `200`, duration `970 ms`
+  - `v3/balance`: HTTP `200`, provider `200`, duration `756 ms`
+  - `v3/getbalance`: HTTP `200`, provider `200`, duration `879 ms`
+  - active inventory numbers imported: `12`
+  - balance snapshots imported: `2`
+  - temporary test files and DB under `/tmp/multitel-slice101-live-test` were removed after verification.
 - Inventory-imported caller IDs use `source=multitel_inventory`, `allow_explicit_use=true`, and `allow_auto_selection=true`.
 - Customer-provided caller IDs must use a separate source such as `customer_verified_external`; inventory imports only disable caller IDs whose source is `multitel_inventory`.
 
