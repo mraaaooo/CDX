@@ -96,6 +96,12 @@ Multitel/API and app baseline snapshot on `mail-cdx`:
   - active inventory numbers imported: `12`
   - balance snapshots imported: `2`
   - temporary test files and DB under `/tmp/multitel-slice101-live-test` were removed after verification.
+- MySQL migration was applied to the configured `sms_fortrexs` database on `mail-cdx` using `backend/scripts/apply_multitel_control_schema.py`.
+  - New tables created: `authorized_caller_ids`, `multitel_api_requests`, `multitel_balance_snapshots`, `multitel_inventory_events`, `multitel_inventory_snapshots`, `multitel_number_sip_assignments`, `multitel_numbers`, `multitel_sip_accounts`.
+  - One live read-only sync was run into MySQL after migration.
+  - Post-sync MySQL verification: `12` active Multitel numbers, `12` active authorized caller IDs, `2` balance snapshots, API request rows for `v3/inventory`, `v3/balance`, and `v3/getbalance` all HTTP `200` / provider `200`.
+  - `multitel_sip_accounts` and `multitel_number_sip_assignments` remained `0` because Multitel `/inventory` did not expose SIP assignment fields.
+  - Temporary migration files under `/tmp/multitel-slice101-apply` were removed after verification.
 - Inventory-imported caller IDs use `source=multitel_inventory`, `allow_explicit_use=true`, and `allow_auto_selection=true`.
 - Customer-provided caller IDs must use a separate source such as `customer_verified_external`; inventory imports only disable caller IDs whose source is `multitel_inventory`.
 
