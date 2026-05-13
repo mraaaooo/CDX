@@ -118,7 +118,11 @@ Multitel/API and app baseline snapshot on `mail-cdx`:
   - Corrected live dry run: `seen=12`, `removed=0`, `restored=12`, `balance_snapshots=2`.
   - Monitor state initialized at `last_notified_inventory_event_id=36`, latest balance `62.53517`, `low_balance_notified=0`.
   - Installed `/opt/multitel-sms` dry run after baseline: `seen=12`, `removed=0`, `restored=0`, `notifications=[]`.
-  - Files installed on `mail-cdx` with backup `/var/backups/fortrexs/multitel-monitor-20260513T090550Z`; timer remains disabled.
+  - Files installed on `mail-cdx` with backup `/var/backups/fortrexs/multitel-monitor-20260513T090550Z`.
+- Commit `4b17dc0` adds unattended systemd credential loading for the monitor:
+  - `multitel-control-monitor.service` uses `LoadCredential=multitel.cred:/root/multitel.cred`.
+  - Manual systemd run succeeded on `mail-cdx`: `seen=12`, `removed=0`, `notifications=[]`.
+  - `multitel-control-monitor.timer` was enabled on 2026-05-13; next observed run was `2026-05-14 08:21:21 UTC`.
 - Inventory-imported caller IDs use `source=multitel_inventory`, `allow_explicit_use=true`, and `allow_auto_selection=true`.
 - Customer-provided caller IDs must use a separate source such as `customer_verified_external`; inventory imports only disable caller IDs whose source is `multitel_inventory`.
 
