@@ -105,6 +105,20 @@ Multitel/API and app baseline snapshot on `mail-cdx`:
   - Temporary migration files under `/tmp/multitel-slice101-apply` were removed after verification.
 - Notification identity for this slice was provisioned on `mail-cdx`: mailbox `monitor@ruaxx.org`, LDAP `fortrexsServiceAccess: deltachat`, and `fortrexs-notify` sender config with display name `Fortrexs Monitor`. Config backup: `/etc/fortrexs-notify/config.json.bak-monitor-20260512`.
 - Delta Chat verification for `monitor@ruaxx.org`: secure join with `mraaaooo@ruaxx.org` reached `ready`, test job `ac3fc58d-164e-458f-b615-a09555d32500` sent as `dc_message_id=16`, and the user confirmed arrival.
+- Commit `cffc3d8` adds the Multitel monitor notification slice:
+  - New table: `multitel_monitor_state`.
+  - New script: `backend/scripts/monitor_multitel_control.py`.
+  - New disabled-by-default systemd files: `multitel-control-monitor.service` and `multitel-control-monitor.timer`.
+  - The monitor runs live read-only inventory/balance sync, sends through `monitor@ruaxx.org`, and suppresses duplicates with `last_notified_inventory_event_id` plus `low_balance_notified`.
+  - `--dry-run` does not send notifications and does not advance monitor state.
+  - `--initialize-state` baselines the current inventory/balance without sending notifications.
+- Production validation on `mail-cdx` on 2026-05-13:
+  - `multitel_monitor_state` was created in MySQL; no other new control table was missing.
+  - An initial malformed credential-shell dry run produced false remove/restore events; importer was hardened to refuse failed provider responses before snapshot/event writes.
+  - Corrected live dry run: `seen=12`, `removed=0`, `restored=12`, `balance_snapshots=2`.
+  - Monitor state initialized at `last_notified_inventory_event_id=36`, latest balance `62.53517`, `low_balance_notified=0`.
+  - Installed `/opt/multitel-sms` dry run after baseline: `seen=12`, `removed=0`, `restored=0`, `notifications=[]`.
+  - Files installed on `mail-cdx` with backup `/var/backups/fortrexs/multitel-monitor-20260513T090550Z`; timer remains disabled.
 - Inventory-imported caller IDs use `source=multitel_inventory`, `allow_explicit_use=true`, and `allow_auto_selection=true`.
 - Customer-provided caller IDs must use a separate source such as `customer_verified_external`; inventory imports only disable caller IDs whose source is `multitel_inventory`.
 
