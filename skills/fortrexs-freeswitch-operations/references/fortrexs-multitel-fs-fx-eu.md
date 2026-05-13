@@ -123,6 +123,12 @@ Multitel/API and app baseline snapshot on `mail-cdx`:
   - `multitel-control-monitor.service` uses `LoadCredential=multitel.cred:/root/multitel.cred`.
   - Manual systemd run succeeded on `mail-cdx`: `seen=12`, `removed=0`, `notifications=[]`.
   - `multitel-control-monitor.timer` was enabled on 2026-05-13; next observed run was `2026-05-14 08:21:21 UTC`.
+- Commit `5ffa6b4` adds `backend/scripts/import_multitel_sip_assignments.py` for operator-confirmed SIP-account and DID-assignment imports:
+  - Dry-run by default; `--apply` is required for DB writes.
+  - Does not call or mutate Multitel.
+  - Validates assignment DIDs against `multitel_numbers`.
+  - Live dry-run on `mail-cdx` with one sample SIP account and one sample DID assignment reported `sip_accounts_created=1`, `assignments_created=1`, and `assignment_errors=[]`.
+  - Installed at `/opt/multitel-sms/scripts/import_multitel_sip_assignments.py`.
 - Inventory-imported caller IDs use `source=multitel_inventory`, `allow_explicit_use=true`, and `allow_auto_selection=true`.
 - Customer-provided caller IDs must use a separate source such as `customer_verified_external`; inventory imports only disable caller IDs whose source is `multitel_inventory`.
 
