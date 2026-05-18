@@ -137,6 +137,15 @@ Multitel/API and app baseline snapshot on `mail-cdx`:
   - Inactive pseudo SIP-account audit rows from the first parser run: `+12134603576@109.235.246.101`, `0`, and `user1@vpbx400204210.mangosip.ru`.
   - Live DB backup before final reconcile: `/var/backups/fortrexs/multitel/db-before-final-routing-reconcile-20260518T043408Z.json`.
   - Local SQLite compatibility DB was reconciled too; backup: `/var/lib/multitel-sms/multitel-sms.sqlite3.bak-before-control-reconcile-20260518T045235Z`.
+- Redmine issue `#100` pricing foundation on 2026-05-18:
+  - Pricing/routing schema is vendor-normalized, not Multitel-only: `iptel_vendors`, `iptel_rate_imports`, and `iptel_termination_rates`.
+  - `iptel_vendors.id=1` is reserved/seeded for `vendor_key=multitel`, `display_name=Multitel`.
+  - Supplied combined Multitel customer prices CSV was saved at `/var/backups/fortrexs/multitel/rates/customer_prices_combined_20260511.csv`, SHA256 `e1cac8666db4005d692cf1d09ae5788bdb51359fae2c7ee95f52bd97e3b69cf9`.
+  - Live MySQL pricing import: `iptel_rate_imports.id=1`, `vendor_id=1`, `rate_plan=outbound_termination_combined`, `row_count=54984`, active.
+  - Full CSV characteristics: `54984` rows, `237` ISO labels, `6274` rows with blank ISO, `5` duplicate prefixes, prefix length range `1..11`.
+  - Offline evaluator script: `/opt/multitel-sms/scripts/evaluate_multitel_route.py`. It uses active vendor/rate-plan imports, longest-prefix match, authorized caller IDs, EU/EEA Origin bucket, Local bucket, International bucket, and `Price` fallback for unknown caller country.
+  - Live MySQL sample evaluation for `33612345678`: selected caller ID `3726346125` (`EE`) for `Origin` bucket, rate `0.082000`; explicit `33612345678*12136995776` selected US caller ID `12136995776` for `International` bucket, rate `0.230400`; `33612345678#` parsed as `withhold_cli` and selected an owned Multitel inventory caller ID.
+  - DB backup before rate import: `/var/backups/fortrexs/multitel/db-before-rate-import-20260518T063826Z.json`.
 - Inventory-imported caller IDs use `source=multitel_inventory`, `allow_explicit_use=true`, and `allow_auto_selection=true`.
 - Customer-provided caller IDs must use a separate source such as `customer_verified_external`; inventory imports only disable caller IDs whose source is `multitel_inventory`.
 
