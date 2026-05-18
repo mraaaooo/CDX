@@ -79,7 +79,7 @@ Multitel/API and app baseline snapshot on `mail-cdx`:
 - Production target for inventory, caller-ID policy, pricing, balance, and routing-control data is MySQL via `DATABASE_URL`; SQLite remains only the current service compatibility/local smoke-test path until a DB migration is approved.
 - User requested a normalized MySQL schema and a log of every Multitel API request. Saved-response imports write `multitel_api_requests` rows with redacted metadata and response hashes; live API clients must also log every call there.
 - Multitel voice-routing model is trunk SIP accounts plus FreeSWITCH, not Hosted PBX.
-- User stated there are `8` Multitel trunk SIP accounts configured in the portal; track them in `multitel_sip_accounts` and DID assignments in `multitel_number_sip_assignments`.
+- User stated there are `8` Multitel trunk SIP accounts configured in the portal; track them in `multitel_sip_accounts` and DID assignments in `multitel_number_sip_assignments`. `SIP URI` destinations are not SIP accounts and should use `sip_account_id=0`.
 - Non-critical pilot DID for a future approved Multitel SIP-account assignment mutation test: `447520644604`.
 - Offline importer script: `backend/scripts/sync_multitel_snapshot.py`.
 - Importer accepts saved Multitel inventory and balance JSON files; it does not call the live API itself in this slice.
@@ -101,7 +101,7 @@ Multitel/API and app baseline snapshot on `mail-cdx`:
   - New tables created: `authorized_caller_ids`, `multitel_api_requests`, `multitel_balance_snapshots`, `multitel_inventory_events`, `multitel_inventory_snapshots`, `multitel_number_sip_assignments`, `multitel_numbers`, `multitel_sip_accounts`.
   - One live read-only sync was run into MySQL after migration.
   - Post-sync MySQL verification: `12` active Multitel numbers, `12` active authorized caller IDs, `2` balance snapshots, API request rows for `v3/inventory`, `v3/balance`, and `v3/getbalance` all HTTP `200` / provider `200`.
-  - `multitel_sip_accounts` and `multitel_number_sip_assignments` remained `0` because Multitel `/inventory` did not expose SIP assignment fields.
+  - Initial parser did not read nested portal routing fields, so SIP assignment tables were empty. Later evidence showed `/inventory` exposes routing under `config.forward_destination`, `config.uri`, `config.uri2`, `config.uri3`, and `status.origination.origination_trunk_name`.
   - Temporary migration files under `/tmp/multitel-slice101-apply` were removed after verification.
 - Notification identity for this slice was provisioned on `mail-cdx`: mailbox `monitor@ruaxx.org`, LDAP `fortrexsServiceAccess: deltachat`, and `fortrexs-notify` sender config with display name `Fortrexs Monitor`. Config backup: `/etc/fortrexs-notify/config.json.bak-monitor-20260512`.
 - Delta Chat verification for `monitor@ruaxx.org`: secure join with `mraaaooo@ruaxx.org` reached `ready`, test job `ac3fc58d-164e-458f-b615-a09555d32500` sent as `dc_message_id=16`, and the user confirmed arrival.
@@ -129,6 +129,14 @@ Multitel/API and app baseline snapshot on `mail-cdx`:
   - Validates assignment DIDs against `multitel_numbers`.
   - Live dry-run on `mail-cdx` with one sample SIP account and one sample DID assignment reported `sip_accounts_created=1`, `assignments_created=1`, and `assignment_errors=[]`.
   - Installed at `/opt/multitel-sms/scripts/import_multitel_sip_assignments.py`.
+- Follow-up live reconciliation on 2026-05-18:
+  - `sync_multitel_snapshot.py` now normalizes nested `/inventory` routing fields and maps `forward_destination` `7` to `SIP Account`, `1` to `SIP URI`, and `15` to `Hosted PBX`.
+  - Operator seed import supports `--allow-non-inventory` for inactive historical DIDs and `--deactivate-missing-sip-accounts` when the seed is a complete account list.
+  - Live MySQL final state: `13` total Multitel number rows, `12` active inventory numbers, `11` total SIP account rows, `8` active SIP accounts, `13` total DID assignment rows, `12` active assignments, and `12` active inventory caller IDs.
+  - Historical DID `14378879076` is stored inactive with inactive assignment to SIP account `1240312572`; this preserves the old FreeSWITCH gateway evidence without claiming it is in current Multitel inventory.
+  - Inactive pseudo SIP-account audit rows from the first parser run: `+12134603576@109.235.246.101`, `0`, and `user1@vpbx400204210.mangosip.ru`.
+  - Live DB backup before final reconcile: `/var/backups/fortrexs/multitel/db-before-final-routing-reconcile-20260518T043408Z.json`.
+  - Local SQLite compatibility DB was reconciled too; backup: `/var/lib/multitel-sms/multitel-sms.sqlite3.bak-before-control-reconcile-20260518T045235Z`.
 - Inventory-imported caller IDs use `source=multitel_inventory`, `allow_explicit_use=true`, and `allow_auto_selection=true`.
 - Customer-provided caller IDs must use a separate source such as `customer_verified_external`; inventory imports only disable caller IDs whose source is `multitel_inventory`.
 
